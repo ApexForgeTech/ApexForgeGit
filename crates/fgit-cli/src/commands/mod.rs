@@ -16,3 +16,7 @@ pub mod reset;
 pub mod restore;
 pub mod gc;
 pub mod rebase;
+pub mod cherry_pick;
+pub mod blame;
+pub mod fetch;
+pub mod reflog;

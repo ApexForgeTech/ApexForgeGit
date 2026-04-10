@@ -117,7 +117,22 @@ enum Commands {
     /// Rebase current branch on top of another branch
     Rebase {
         branch: String,
+        /// Open an interactive prompt to resolve commits
+        #[arg(short, long)]
+        interactive: bool,
     },
+    /// Apply the changes introduced by an existing commit
+    CherryPick {
+        commit: String,
+    },
+    /// Show what revision and author last modified each line of a file
+    Blame {
+        file: String,
+    },
+    /// Download objects and refs from another repository
+    Fetch,
+    /// Manage reflog information
+    Reflog,
 }
 
 #[derive(Subcommand)]
@@ -206,7 +221,11 @@ fn main() {
             commands::restore::run(&path, source.as_deref(), staged)
         }
         Commands::Gc => commands::gc::run(),
-        Commands::Rebase { branch } => commands::rebase::run(&branch),
+        Commands::Rebase { branch, interactive } => commands::rebase::run(&branch, interactive),
+        Commands::CherryPick { commit } => commands::cherry_pick::run(&commit),
+        Commands::Blame { file } => commands::blame::run(&file),
+        Commands::Fetch => commands::fetch::run(),
+        Commands::Reflog => commands::reflog::run(),
     };
 
     if let Err(e) = result {
