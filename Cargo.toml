@@ -1,0 +1,13 @@
+[workspace]
+members = [
+    "crates/fgit-core",
+    "crates/fgit-cli",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["ApexForge Team"]
+license = "MIT"
+description = "ApexForge Git — Next-generation Version Control System"
