@@ -20,3 +20,8 @@ pub mod cherry_pick;
 pub mod blame;
 pub mod fetch;
 pub mod reflog;
+pub mod bisect;
+pub mod archive;
+pub mod submodule;
+pub mod worktree;
+pub mod patch;

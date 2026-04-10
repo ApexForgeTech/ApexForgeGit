@@ -133,6 +133,75 @@ enum Commands {
     Fetch,
     /// Manage reflog information
     Reflog,
+    /// Use binary search to find the commit that introduced a bug
+    Bisect {
+        #[command(subcommand)]
+        action: BisectAction,
+    },
+    /// Export repository at a specific commit as an archive file
+    Archive {
+        /// The output file path (.zip or .tar.gz)
+        output: String,
+        /// Optional commit hash (defaults to HEAD)
+        #[arg(short, long)]
+        commit: Option<String>,
+    },
+    /// Manage nested repositories
+    Submodule {
+        #[command(subcommand)]
+        action: SubmoduleAction,
+    },
+    /// Manage multiple working trees
+    Worktree {
+        #[command(subcommand)]
+        action: WorktreeAction,
+    },
+    /// Generate a patch file from a commit
+    FormatPatch {
+        /// The commit to format
+        commit: String,
+    },
+    /// Apply a patch file
+    Apply {
+        /// The patch file
+        file: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum WorktreeAction {
+    /// Add a new working tree
+    Add {
+        /// Path to the new working tree
+        path: String,
+        /// Branch to check out into the new working tree
+        branch: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum SubmoduleAction {
+    /// Add a new submodule
+    Add {
+        /// Remote URL
+        url: String,
+        /// Target path
+        path: String,
+    },
+    /// Update/Initialize missing submodules
+    Update,
+}
+
+#[derive(Subcommand)]
+enum BisectAction {
+    /// Start a bisect session
+    Start,
+    /// Mark a commit as bad (defaults to HEAD)
+    Bad { commit: Option<String> },
+    /// Mark a commit as good
+    Good { commit: String },
+    /// Reset bisect state and return to original branch
+    Reset,
 }
 
 #[derive(Subcommand)]
@@ -226,6 +295,22 @@ fn main() {
         Commands::Blame { file } => commands::blame::run(&file),
         Commands::Fetch => commands::fetch::run(),
         Commands::Reflog => commands::reflog::run(),
+        Commands::Bisect { action } => match action {
+            BisectAction::Start => commands::bisect::start(),
+            BisectAction::Bad { commit } => commands::bisect::bad(commit.as_deref()),
+            BisectAction::Good { commit } => commands::bisect::good(&commit),
+            BisectAction::Reset => commands::bisect::reset(),
+        },
+        Commands::Archive { output, commit } => commands::archive::run(commit.as_deref(), &output),
+        Commands::Submodule { action } => match action {
+            SubmoduleAction::Add { url, path } => commands::submodule::add(&url, &path),
+            SubmoduleAction::Update => commands::submodule::update(),
+        },
+        Commands::Worktree { action } => match action {
+            WorktreeAction::Add { path, branch } => commands::worktree::add(&path, &branch),
+        },
+        Commands::FormatPatch { commit } => commands::patch::format_patch(&commit),
+        Commands::Apply { file } => commands::patch::apply(&file),
     };
 
     if let Err(e) = result {

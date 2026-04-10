@@ -99,23 +99,30 @@ impl Repository {
 
     /// Open an existing repository by finding .fgit in current or parent dirs
     pub fn open(path: &Path) -> RepoResult<Self> {
-        let mut current = path.to_path_buf();
-
+        let mut curr = path.to_path_buf();
         loop {
-            let fgit_dir = current.join(FGIT_DIR);
-            if fgit_dir.is_dir() {
-                return Ok(Self {
-                    workdir: current,
-                    fgit_dir,
+            let fgit = curr.join(".fgit");
+            if fgit.exists() {
+                // Worktree checking
+                let mut actual_fgit_dir = fgit.clone();
+                if fgit.is_file() {
+                    let content = std::fs::read_to_string(&fgit).map_err(|_| RepoError::General("Cannot read .fgit file".to_string()))?;
+                    if content.starts_with("gitdir: ") {
+                        let linked = content.replace("gitdir: ", "").trim().to_string();
+                        actual_fgit_dir = std::path::PathBuf::from(linked);
+                    }
+                }
+                
+                return Ok(Repository {
+                    fgit_dir: actual_fgit_dir,
+                    workdir: curr,
                 });
             }
-
-            if !current.pop() {
-                return Err(RepoError::NotARepository(
-                    path.display().to_string(),
-                ));
+            if !curr.pop() {
+                break;
             }
         }
+        Err(RepoError::NotARepository(path.display().to_string()))
     }
 
     /// Store an object in the object store
